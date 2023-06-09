@@ -1,0 +1,98 @@
+-- Ejercicio 1
+SELECT
+    SUM(totales.TotalLinea) as Monto_Vendido,
+    SUM (totales.Cantidad) as Cantidad_Vendida
+from
+    (
+        select
+            dv.ID_Venta,
+            dv.TotalLinea,
+            dv.Cantidad
+        from
+            Venta v
+            INNER JOIN VentaDetalle dv on dv.ID_Venta = v.ID_Venta
+        WHERE
+            v.Fecha > (
+                select
+                    dateadd(day, -30, getdate())
+            )
+        GROUP by
+            dv.ID_Venta,
+            TotalLinea,
+            Cantidad
+    ) as totales;
+    
+-- Ejercicio 2
+SELECT
+    top 1 convert(varchar, Fecha, 107) as Dia,
+    FORMAT (Fecha, 'hh:mm:ss tt') as Hora,
+    MAX(Total) as Maximo_Monto
+from
+    Venta
+where
+    Fecha > (
+        select
+            dateadd(day, -30, getdate())
+    )
+GROUP BY
+    Fecha,
+    Total
+ORDER BY
+    Total DESC;
+    
+    
+    -- Ejercicio 3
+SELECT
+    p.Nombre,
+    TotalVendido
+from
+    (
+        (
+            SELECT
+                top 1 ID_Producto,
+                TotalVendido
+            FROM
+                (
+                    select
+                        ID_Producto,
+                        SUM(v.Total) as TotalVendido
+                    from
+                        VentaDetalle dvv
+                        LEFT JOIN Venta v on dvv.ID_Venta = v.ID_Venta
+                    WHERE
+                        v.Fecha > (
+                            SELECT
+                                dateadd(day, -30, getdate())
+                        )
+                    GROUP by
+                        ID_Producto
+                ) as dv
+            GROUP by
+                TotalVendido,
+                ID_Producto
+            ORDER by
+                TotalVendido desc
+        )
+    ) as d
+    INNER JOIN Producto p on p.ID_Producto = d.ID_Producto
+GROUP by
+    p.Nombre,
+    TotalVendido ;
+    
+      -- Ejercicio 4
+SELECT
+    top 1 l.Nombre,
+    SUM(Total) as ventas
+from
+    Venta as v
+    INNER JOIN [Local] as l on v.ID_Local = l.ID_Local
+where
+    Fecha > (
+        select
+            dateadd(day, -30, getdate())
+    )
+GROUP BY
+    l.Nombre
+ORDER BY
+    ventas DESC
+    
